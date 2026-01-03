@@ -8,7 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   body { font-family: sans-serif; }
-  table th, table td { text-align: center; }
 </style>
 </head>
 <body class="bg-gray-100">
@@ -28,32 +27,52 @@
 
   <div class="flex justify-between items-center">
     <h1 class="text-3xl font-bold">Chama Dashboard</h1>
-    <p>Logged in as: <span id="userRole"></span></p>
+    <p class="text-gray-700">Logged in as: <span id="userRole"></span></p>
   </div>
 
-  <!-- DASHBOARD CARDS -->
+  <!-- DASHBOARD STATS -->
   <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Members</p><p id="totalMembers" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Total Contributions</p><p id="totalContrib" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Total Loans</p><p id="totalLoans" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Balance</p><p id="totalBalance" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Overdue Loans</p><p id="overdueLoans" class="text-2xl font-bold text-red-600">0</p></div>
+    <div class="bg-white p-4 rounded shadow text-center">
+      <p class="text-gray-500">Members</p>
+      <p id="totalMembers" class="text-2xl font-bold">0</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow text-center">
+      <p class="text-gray-500">Total Contributions</p>
+      <p id="totalContrib" class="text-2xl font-bold">0</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow text-center">
+      <p class="text-gray-500">Total Loans</p>
+      <p id="totalLoans" class="text-2xl font-bold">0</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow text-center">
+      <p class="text-gray-500">Balance</p>
+      <p id="totalBalance" class="text-2xl font-bold">0</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow text-center">
+      <p class="text-gray-500">Overdue Loans</p>
+      <p id="overdueLoans" class="text-2xl font-bold text-red-600">0</p>
+    </div>
   </div>
 
   <!-- ADMIN PANEL -->
   <div id="adminPanel" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden mt-4">
+    <!-- ADD MEMBER -->
     <div class="bg-white p-4 rounded shadow">
       <h2 class="font-semibold mb-2">Add Member</h2>
       <input id="newMemberName" placeholder="Name" class="border p-2 rounded w-full mb-2">
       <input id="newMemberPhone" placeholder="Phone" class="border p-2 rounded w-full mb-2">
       <button onclick="addMember()" class="bg-green-600 text-white px-4 py-2 rounded w-full">Add Member</button>
     </div>
+
+    <!-- ADD CONTRIBUTION -->
     <div class="bg-white p-4 rounded shadow">
       <h2 class="font-semibold mb-2">Add Contribution</h2>
       <select id="contribMemberSelect" class="border p-2 rounded w-full mb-2"></select>
       <input id="contribAmount" type="number" placeholder="Amount" class="border p-2 rounded w-full mb-2">
       <button onclick="addContribution()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Add Contribution</button>
     </div>
+
+    <!-- ADD LOAN -->
     <div class="bg-white p-4 rounded shadow">
       <h2 class="font-semibold mb-2">Add Loan</h2>
       <select id="loanMemberSelect" class="border p-2 rounded w-full mb-2"></select>
@@ -78,14 +97,12 @@
   <div class="bg-white p-4 rounded shadow mt-4">
     <h2 class="text-xl font-semibold mb-3">Member Statement</h2>
     <select id="memberSelect" class="border p-2 rounded mb-3 w-full md:w-1/3"></select>
-    <div class="overflow-x-auto">
-      <table class="w-full table-auto border-collapse border mb-3">
-        <thead class="bg-gray-200">
-          <tr><th class="border p-2">Date</th><th class="border p-2">Type</th><th class="border p-2">Amount</th><th class="border p-2">Status</th></tr>
-        </thead>
-        <tbody id="statementBody"></tbody>
-      </table>
-    </div>
+    <table class="w-full table-auto border-collapse border mb-3">
+      <thead class="bg-gray-200">
+        <tr><th class="border p-2">Date</th><th class="border p-2">Type</th><th class="border p-2">Amount</th><th class="border p-2">Status</th></tr>
+      </thead>
+      <tbody id="statementBody"></tbody>
+    </table>
     <p class="font-bold">Total Contributions: <span id="statementContrib">0</span></p>
     <p class="font-bold">Total Loans: <span id="statementLoans">0</span></p>
     <p class="font-bold">Balance: <span id="statementBalance">0</span></p>
@@ -94,85 +111,78 @@
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec"; // replace with your Apps Script URL
-let currentUserRole = null, loggedInMemberId = null;
-let members = [], contributions = [], loans = [];
+const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec"; // replace with your deployed Apps Script URL
+let currentUserRole=null, loggedInPhone=null, members=[], contributions=[], loans=[];
 
 // ===== LOGIN =====
 function login(){
   const phone = document.getElementById("phone").value;
   const password = document.getElementById("password").value;
-  fetch(API, { method:"POST", body:JSON.stringify({ action:"login", phone, password }) })
+  fetch(API,{method:"POST",body:JSON.stringify({action:"login",phone,password})})
   .then(r=>r.json())
   .then(data=>{
     if(data.success){
-      currentUserRole = data.role;
-      loggedInMemberId = data.memberId || null;
-      document.getElementById("userRole").textContent = currentUserRole.toUpperCase();
+      currentUserRole=data.role;
+      loggedInPhone=phone;
+      document.getElementById("userRole").textContent=currentUserRole.toUpperCase();
       document.getElementById("loginPage").classList.add("hidden");
       document.getElementById("dashboardPage").classList.remove("hidden");
       if(currentUserRole==="admin") document.getElementById("adminPanel").classList.remove("hidden");
       loadData();
-    } else alert("Login failed: " + data.message);
+    } else alert(data.message);
   });
 }
 
 // ===== LOAD DATA =====
 function loadData(){
-  Promise.all([
-    fetch(API,{method:"POST",body:JSON.stringify({action:"getMembers",role:currentUserRole,memberId:loggedInMemberId})}).then(r=>r.json()),
-    fetch(API,{method:"POST",body:JSON.stringify({action:"getContributions",role:currentUserRole,memberId:loggedInMemberId})}).then(r=>r.json()),
-    fetch(API,{method:"POST",body:JSON.stringify({action:"getLoans",role:currentUserRole,memberId:loggedInMemberId})}).then(r=>r.json())
-  ]).then(([m,c,l])=>{
-    members = m.slice(1); contributions = c.slice(1); loans = l.slice(1);
+  Promise.all([post("getMembers"), post("getContributions"), post("getLoans")])
+  .then(([m,c,l])=>{
+    members=m.slice(1); contributions=c.slice(1); loans=l.slice(1);
     renderDashboard(); renderCharts(); renderMemberSelect(); populateAdminSelects();
   });
 }
 
+function post(action,data={}){ return fetch(API,{method:"POST",body:JSON.stringify({...data,action})}).then(r=>r.json()); }
+
 // ===== DASHBOARD =====
 function renderDashboard(){
-  const visibleMembers = currentUserRole==="admin"?members:members.filter(m=>m[0]==loggedInMemberId);
-  document.getElementById("totalMembers").textContent = visibleMembers.length;
-
+  const visibleMembers = currentUserRole==="admin"?members:members.filter(m=>m[2]===loggedInPhone);
+  document.getElementById("totalMembers").textContent=visibleMembers.length;
   const totalContrib = contributions.filter(c=>visibleMembers.some(m=>m[0]==c[1])).reduce((s,c)=>s+Number(c[2]),0);
   const totalLoans = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1])).reduce((s,l)=>s+Number(l[2]),0);
-  const balance = totalContrib - totalLoans;
-  const overdueCount = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1]) && ((new Date()-new Date(l[4]))/(1000*60*60*24))>30).length;
-
-  document.getElementById("totalContrib").textContent = totalContrib;
-  document.getElementById("totalLoans").textContent = totalLoans;
-  document.getElementById("totalBalance").textContent = balance;
-  document.getElementById("overdueLoans").textContent = overdueCount;
+  const balance = totalContrib-totalLoans;
+  const overdueCount = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1]) && (new Date()-new Date(l[3]))/(1000*60*60*24)>30).length;
+  document.getElementById("totalContrib").textContent=totalContrib;
+  document.getElementById("totalLoans").textContent=totalLoans;
+  document.getElementById("totalBalance").textContent=balance;
+  document.getElementById("overdueLoans").textContent=overdueCount;
 }
 
 // ===== MEMBER SELECT & STATEMENT =====
 function renderMemberSelect(){
-  const sel = document.getElementById("memberSelect"); sel.innerHTML="";
-  const visibleMembers = currentUserRole==="admin"?members:members.filter(m=>m[0]==loggedInMemberId);
+  const sel=document.getElementById("memberSelect"); sel.innerHTML="";
+  const visibleMembers=currentUserRole==="admin"?members:members.filter(m=>m[2]===loggedInPhone);
   visibleMembers.forEach(m=>{ const opt=document.createElement("option"); opt.value=m[0]; opt.textContent=m[1]; sel.appendChild(opt); });
   sel.onchange=showStatement; if(sel.options.length>0) sel.selectedIndex=0; showStatement();
 }
 
 function showStatement(){
-  const memberId = document.getElementById("memberSelect").value; if(!memberId) return;
-  fetch(API,{method:"POST",body:JSON.stringify({action:"memberStatement",memberId})})
-  .then(r=>r.json())
-  .then(data=>{
-    if(!data.success) return;
-    const tbody = document.getElementById("statementBody"); tbody.innerHTML="";
+  const memberId=document.getElementById("memberSelect").value; if(!memberId) return;
+  post("memberStatement",{memberId}).then(data=>{
+    const tbody=document.getElementById("statementBody"); tbody.innerHTML="";
     data.contributions.forEach(c=>{
-      const tr = document.createElement("tr");
+      const tr=document.createElement("tr");
       tr.innerHTML=`<td class="border p-2">${new Date(c.date).toLocaleDateString()}</td><td class="border p-2">Contribution</td><td class="border p-2">${c.amount}</td><td class="border p-2">-</td>`;
       tbody.appendChild(tr);
     });
     data.loans.forEach(l=>{
-      const tr = document.createElement("tr");
+      const tr=document.createElement("tr");
       tr.innerHTML=`<td class="border p-2">${new Date(l.date).toLocaleDateString()}</td><td class="border p-2">Loan</td><td class="border p-2">${l.amount}</td><td class="border p-2 ${l.overdue?'text-red-600 font-bold':''}">${l.status}${l.overdue?' (Overdue)':''}</td>`;
       tbody.appendChild(tr);
     });
-    document.getElementById("statementContrib").textContent = data.totalContributions;
-    document.getElementById("statementLoans").textContent = data.totalLoans;
-    document.getElementById("statementBalance").textContent = data.balance;
+    document.getElementById("statementContrib").textContent=data.totalContributions;
+    document.getElementById("statementLoans").textContent=data.totalLoans;
+    document.getElementById("statementBalance").textContent=data.balance;
   });
 }
 
@@ -181,15 +191,8 @@ function renderCharts(){
   const labels = members.map(m=>m[1]);
   const contribData = members.map(m=>contributions.filter(c=>c[1]==m[0]).reduce((s,c)=>s+Number(c[2]),0));
   const loanData = members.map(m=>loans.filter(l=>l[1]==m[0]).reduce((s,l)=>s+Number(l[2]),0));
-
-  new Chart(document.getElementById("contribChart"),{
-    type:"bar",
-    data:{labels,datasets:[{label:"Contributions",data:contribData,backgroundColor:"#3b82f6"}]}
-  });
-  new Chart(document.getElementById("loanChart"),{
-    type:"pie",
-    data:{labels,datasets:[{label:"Loans",data:loanData,backgroundColor:["#ef4444","#facc15","#10b981","#3b82f6"]}]}
-  });
+  new Chart(document.getElementById("contribChart"),{type:"bar",data:{labels,datasets:[{label:"Contributions",data:contribData,backgroundColor:"#3b82f6"}]}});
+  new Chart(document.getElementById("loanChart"),{type:"pie",data:{labels,datasets:[{label:"Loans",data:loanData,backgroundColor:["#ef4444","#facc15","#10b981","#3b82f6"]}]}});  
 }
 
 // ===== ADMIN ACTIONS =====
@@ -203,25 +206,10 @@ function populateAdminSelects(){
   });
 }
 
-// ===== ADD ACTIONS =====
-function addMember(){
-  const name=document.getElementById("newMemberName").value;
-  const phone=document.getElementById("newMemberPhone").value;
-  fetch(API,{method:"POST",body:JSON.stringify({action:"addMember",name,phone})}).then(r=>r.json()).then(d=>{if(d.success){alert("Member added");loadData();}});
-}
-
-function addContribution(){
-  const memberId=document.getElementById("contribMemberSelect").value;
-  const amount=document.getElementById("contribAmount").value;
-  fetch(API,{method:"POST",body:JSON.stringify({action:"addContribution",memberId,amount})}).then(r=>r.json()).then(d=>{if(d.success){alert("Contribution added");loadData();}});
-}
-
-function addLoan(){
-  const memberId=document.getElementById("loanMemberSelect").value;
-  const amount=document.getElementById("loanAmount").value;
-  fetch(API,{method:"POST",body:JSON.stringify({action:"addLoan",memberId,amount})}).then(r=>r.json()).then(d=>{if(d.success){alert("Loan added");loadData();}});
-}
-
+// ===== ADMIN CRUD =====
+function addMember(){ const name=document.getElementById("newMemberName").value; const phone=document.getElementById("newMemberPhone").value; post("addMember",{name,phone}).then(()=>loadData()); }
+function addContribution(){ const memberId=document.getElementById("contribMemberSelect").value; const amount=document.getElementById("contribAmount").value; post("addContribution",{memberId,amount}).then(()=>loadData()); }
+function addLoan(){ const memberId=document.getElementById("loanMemberSelect").value; const amount=document.getElementById("loanAmount").value; post("addLoan",{memberId,amount}).then(()=>loadData()); }
 </script>
 </body>
 </html>
