@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chama System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -85,17 +85,19 @@
   <button onclick="downloadPDF()" class="mt-3 bg-gray-800 text-white px-4 py-2 rounded">Download PDF Statement</button>
 </div>
 
-</div>
-
 <script>
-const API = "https://script.google.com/macros/s/AKfycbzcEcvj0mPuPkUcRu_cpKr-DDKuQH8XR2hpVX9LRuEhEzc7nQWi8BNcF6EQ-rujcFgX/exec";
+const API = "https://script.google.com/macros/s/AKfycbzcEcvj0mPuPkUcRu_cpKr-DDKuQH8XR2hpVX9LRuEhEzc7nQWi8BNcF6EQ-rujcFgX/exec"; 
 let currentUserRole=null, loggedInPhone=null, members=[], contributions=[], loans=[];
 
 // ===== LOGIN =====
 function login(){
   const phone=document.getElementById("phone").value;
   const password=document.getElementById("password").value;
-  fetch(API+"?action=login",{method:"POST", body:JSON.stringify({phone,password})})
+  fetch(API+"?action=login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({phone,password})
+  })
   .then(r=>r.json()).then(data=>{
     if(data.success){
       currentUserRole=data.role; loggedInPhone=phone;
@@ -118,7 +120,13 @@ function loadData(){
   });
 }
 
-function post(action){ return fetch(API+"?action="+action,{method:"POST", body:JSON.stringify({})}).then(r=>r.json()); }
+function post(action){
+  return fetch(API+"?action="+action,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({})
+  }).then(r=>r.json());
+}
 
 // ===== DASHBOARD =====
 function renderDashboard(){
@@ -164,7 +172,7 @@ function renderCharts(){
   const contribData=members.map(m=>contributions.filter(c=>c[1]==m[0]).reduce((s,c)=>s+Number(c[2]),0));
   const loanData=members.map(m=>loans.filter(l=>l[1]==m[0]).reduce((s,l)=>s+Number(l[2]),0));
   new Chart(document.getElementById("contribChart"),{type:"bar", data:{labels,datasets:[{label:"Contributions",data:contribData,backgroundColor:"#3b82f6"}]}});
-  new Chart(document.getElementById("loanChart"),{type:"pie", data:{labels,datasets:[{label:"Loans",data:loanData,backgroundColor:["#ef4444","#facc15","#10b981","#3b82f6"]}]});
+  new Chart(document.getElementById("loanChart"),{type:"pie", data:{labels,datasets:[{label:"Loans",data:loanData,backgroundColor:["#ef4444","#facc15","#10b981","#3b82f6"]}]}});
 }
 
 // ===== ADMIN ACTIONS =====
@@ -183,21 +191,21 @@ function addMember(){
   const name=document.getElementById("newMemberName").value;
   const phone=document.getElementById("newMemberPhone").value;
   if(!name||!phone){alert("Enter name and phone"); return;}
-  fetch(API+"?action=addMember",{method:"POST",body:JSON.stringify({name,phone})}).then(r=>r.json()).then(data=>{if(data.success){alert("Member added"); loadData();}});
+  fetch(API+"?action=addMember",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,phone})}).then(r=>r.json()).then(data=>{if(data.success){alert("Member added"); loadData();}});
 }
 
 function addContribution(){
   const memberId=document.getElementById("contribMemberSelect").value;
   const amount=Number(document.getElementById("contribAmount").value);
   if(!memberId||!amount){alert("Select member & enter amount"); return;}
-  fetch(API+"?action=addContribution",{method:"POST",body:JSON.stringify({memberId,amount})}).then(r=>r.json()).then(data=>{if(data.success){alert("Contribution added"); loadData();}});
+  fetch(API+"?action=addContribution",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({memberId,amount})}).then(r=>r.json()).then(data=>{if(data.success){alert("Contribution added"); loadData();}});
 }
 
 function addLoan(){
   const memberId=document.getElementById("loanMemberSelect").value;
   const amount=Number(document.getElementById("loanAmount").value);
   if(!memberId||!amount){alert("Select member & enter amount"); return;}
-  fetch(API+"?action=addLoan",{method:"POST",body:JSON.stringify({memberId,amount})}).then(r=>r.json()).then(data=>{if(data.success){alert("Loan added"); loadData();}});
+  fetch(API+"?action=addLoan",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({memberId,amount})}).then(r=>r.json()).then(data=>{if(data.success){alert("Loan added"); loadData();}});
 }
 </script>
 
