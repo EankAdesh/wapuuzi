@@ -6,9 +6,7 @@
 <title>Chama System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  body { font-family: sans-serif; }
-</style>
+<style>body{font-family:sans-serif;}</style>
 </head>
 <body class="bg-gray-100">
 
@@ -24,72 +22,36 @@
 
 <!-- DASHBOARD -->
 <div id="dashboardPage" class="hidden p-4 max-w-7xl mx-auto space-y-6">
+  <h1 class="text-3xl font-bold">Chama Dashboard</h1>
+  <p>Logged in as: <span id="userRole"></span></p>
 
-  <div class="flex justify-between items-center">
-    <h1 class="text-3xl font-bold">Chama Dashboard</h1>
-    <p class="text-gray-700">Logged in as: <span id="userRole"></span></p>
-  </div>
-
-  <!-- DASHBOARD STATS -->
   <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-    <div class="bg-white p-4 rounded shadow text-center">
-      <p class="text-gray-500">Members</p>
-      <p id="totalMembers" class="text-2xl font-bold">0</p>
-    </div>
-    <div class="bg-white p-4 rounded shadow text-center">
-      <p class="text-gray-500">Total Contributions</p>
-      <p id="totalContrib" class="text-2xl font-bold">0</p>
-    </div>
-    <div class="bg-white p-4 rounded shadow text-center">
-      <p class="text-gray-500">Total Loans</p>
-      <p id="totalLoans" class="text-2xl font-bold">0</p>
-    </div>
-    <div class="bg-white p-4 rounded shadow text-center">
-      <p class="text-gray-500">Balance</p>
-      <p id="totalBalance" class="text-2xl font-bold">0</p>
-    </div>
-    <div class="bg-white p-4 rounded shadow text-center">
-      <p class="text-gray-500">Overdue Loans</p>
-      <p id="overdueLoans" class="text-2xl font-bold text-red-600">0</p>
-    </div>
+    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Members</p><p id="totalMembers" class="text-2xl font-bold">0</p></div>
+    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Total Contributions</p><p id="totalContrib" class="text-2xl font-bold">0</p></div>
+    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Total Loans</p><p id="totalLoans" class="text-2xl font-bold">0</p></div>
+    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Balance</p><p id="totalBalance" class="text-2xl font-bold">0</p></div>
+    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Overdue Loans</p><p id="overdueLoans" class="text-2xl font-bold text-red-600">0</p></div>
   </div>
 
   <!-- ADMIN PANEL -->
   <div id="adminPanel" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden mt-4">
-    <!-- ADD MEMBER -->
     <div class="bg-white p-4 rounded shadow">
       <h2 class="font-semibold mb-2">Add Member</h2>
       <input id="newMemberName" placeholder="Name" class="border p-2 rounded w-full mb-2">
       <input id="newMemberPhone" placeholder="Phone" class="border p-2 rounded w-full mb-2">
       <button onclick="addMember()" class="bg-green-600 text-white px-4 py-2 rounded w-full">Add Member</button>
     </div>
-
-    <!-- ADD CONTRIBUTION -->
     <div class="bg-white p-4 rounded shadow">
       <h2 class="font-semibold mb-2">Add Contribution</h2>
       <select id="contribMemberSelect" class="border p-2 rounded w-full mb-2"></select>
       <input id="contribAmount" type="number" placeholder="Amount" class="border p-2 rounded w-full mb-2">
       <button onclick="addContribution()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Add Contribution</button>
     </div>
-
-    <!-- ADD LOAN -->
     <div class="bg-white p-4 rounded shadow">
       <h2 class="font-semibold mb-2">Add Loan</h2>
       <select id="loanMemberSelect" class="border p-2 rounded w-full mb-2"></select>
       <input id="loanAmount" type="number" placeholder="Amount" class="border p-2 rounded w-full mb-2">
       <button onclick="addLoan()" class="bg-red-600 text-white px-4 py-2 rounded w-full">Add Loan</button>
-    </div>
-  </div>
-
-  <!-- CHARTS -->
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-semibold mb-2">Contributions</h2>
-      <canvas id="contribChart"></canvas>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-semibold mb-2">Loans</h2>
-      <canvas id="loanChart"></canvas>
     </div>
   </div>
 
@@ -108,22 +70,48 @@
     <p class="font-bold">Balance: <span id="statementBalance">0</span></p>
   </div>
 
+  <!-- ADMIN MANAGEMENT TABLES -->
+  <div id="adminManagement" class="mt-6 hidden">
+    <h2 class="text-xl font-bold mb-2">Manage Members</h2>
+    <table class="w-full table-auto border-collapse border mb-4">
+      <thead class="bg-gray-200">
+        <tr><th class="border p-2">ID</th><th class="border p-2">Name</th><th class="border p-2">Phone</th><th class="border p-2">Actions</th></tr>
+      </thead>
+      <tbody id="membersTable"></tbody>
+    </table>
+
+    <h2 class="text-xl font-bold mb-2">Manage Contributions</h2>
+    <table class="w-full table-auto border-collapse border mb-4">
+      <thead class="bg-gray-200">
+        <tr><th class="border p-2">ID</th><th class="border p-2">Member</th><th class="border p-2">Amount</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr>
+      </thead>
+      <tbody id="contribTable"></tbody>
+    </table>
+
+    <h2 class="text-xl font-bold mb-2">Manage Loans</h2>
+    <table class="w-full table-auto border-collapse border mb-4">
+      <thead class="bg-gray-200">
+        <tr><th class="border p-2">ID</th><th class="border p-2">Member</th><th class="border p-2">Amount</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr>
+      </thead>
+      <tbody id="loansTable"></tbody>
+    </table>
+  </div>
+
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec"; // replace with your deployed Apps Script URL
+const API = "YOUR_APPS_SCRIPT_URL"; // replace with your deployed script URL
 let currentUserRole=null, loggedInPhone=null, members=[], contributions=[], loans=[];
 
 // ===== LOGIN =====
 function login(){
-  const phone = document.getElementById("phone").value;
-  const password = document.getElementById("password").value;
+  const phone=document.getElementById("phone").value;
+  const password=document.getElementById("password").value;
   fetch(API,{method:"POST",body:JSON.stringify({action:"login",phone,password})})
   .then(r=>r.json())
   .then(data=>{
     if(data.success){
-      currentUserRole=data.role;
-      loggedInPhone=phone;
+      currentUserRole=data.role; loggedInPhone=phone;
       document.getElementById("userRole").textContent=currentUserRole.toUpperCase();
       document.getElementById("loginPage").classList.add("hidden");
       document.getElementById("dashboardPage").classList.remove("hidden");
@@ -133,32 +121,32 @@ function login(){
   });
 }
 
+// ===== POST HELPER =====
+function post(action, payload={}){ return fetch(API,{method:"POST",body:JSON.stringify({action,...payload})}).then(r=>r.json()); }
+
 // ===== LOAD DATA =====
 function loadData(){
-  Promise.all([post("getMembers"), post("getContributions"), post("getLoans")])
+  Promise.all([post("getMembers"),post("getContributions"),post("getLoans")])
   .then(([m,c,l])=>{
     members=m.slice(1); contributions=c.slice(1); loans=l.slice(1);
-    renderDashboard(); renderCharts(); renderMemberSelect(); populateAdminSelects();
+    renderDashboard(); renderMemberSelect(); populateAdminSelects(); renderAdminManagement();
   });
 }
 
-function post(action,data={}){ return fetch(API,{method:"POST",body:JSON.stringify({...data,action})}).then(r=>r.json()); }
-
 // ===== DASHBOARD =====
 function renderDashboard(){
-  const visibleMembers = currentUserRole==="admin"?members:members.filter(m=>m[2]===loggedInPhone);
-  document.getElementById("totalMembers").textContent=visibleMembers.length;
+  const visibleMembers=currentUserRole==="admin"?members:members.filter(m=>m[2]===loggedInPhone);
   const totalContrib = contributions.filter(c=>visibleMembers.some(m=>m[0]==c[1])).reduce((s,c)=>s+Number(c[2]),0);
   const totalLoans = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1])).reduce((s,l)=>s+Number(l[2]),0);
-  const balance = totalContrib-totalLoans;
-  const overdueCount = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1]) && (new Date()-new Date(l[3]))/(1000*60*60*24)>30).length;
+  document.getElementById("totalMembers").textContent=visibleMembers.length;
   document.getElementById("totalContrib").textContent=totalContrib;
   document.getElementById("totalLoans").textContent=totalLoans;
-  document.getElementById("totalBalance").textContent=balance;
+  document.getElementById("totalBalance").textContent=totalContrib-totalLoans;
+  const overdueCount = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1]) && ((new Date()-new Date(l[4]))/(1000*60*60*24))>30).length;
   document.getElementById("overdueLoans").textContent=overdueCount;
 }
 
-// ===== MEMBER SELECT & STATEMENT =====
+// ===== MEMBER SELECT =====
 function renderMemberSelect(){
   const sel=document.getElementById("memberSelect"); sel.innerHTML="";
   const visibleMembers=currentUserRole==="admin"?members:members.filter(m=>m[2]===loggedInPhone);
@@ -169,47 +157,53 @@ function renderMemberSelect(){
 function showStatement(){
   const memberId=document.getElementById("memberSelect").value; if(!memberId) return;
   post("memberStatement",{memberId}).then(data=>{
+    if(!data.success) return;
     const tbody=document.getElementById("statementBody"); tbody.innerHTML="";
-    data.contributions.forEach(c=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td class="border p-2">${new Date(c.date).toLocaleDateString()}</td><td class="border p-2">Contribution</td><td class="border p-2">${c.amount}</td><td class="border p-2">-</td>`;
-      tbody.appendChild(tr);
-    });
-    data.loans.forEach(l=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td class="border p-2">${new Date(l.date).toLocaleDateString()}</td><td class="border p-2">Loan</td><td class="border p-2">${l.amount}</td><td class="border p-2 ${l.overdue?'text-red-600 font-bold':''}">${l.status}${l.overdue?' (Overdue)':''}</td>`;
-      tbody.appendChild(tr);
-    });
+    data.contributions.forEach(c=>{const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${new Date(c.date).toLocaleDateString()}</td><td class="border p-2">Contribution</td><td class="border p-2">${c.amount}</td><td class="border p-2">-</td>`; tbody.appendChild(tr);});
+    data.loans.forEach(l=>{const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${new Date(l.date).toLocaleDateString()}</td><td class="border p-2">Loan</td><td class="border p-2">${l.amount}</td><td class="border p-2 ${l.overdue?'text-red-600 font-bold':''}">${l.status}${l.overdue?' (Overdue)':''}</td>`; tbody.appendChild(tr);});
     document.getElementById("statementContrib").textContent=data.totalContributions;
     document.getElementById("statementLoans").textContent=data.totalLoans;
     document.getElementById("statementBalance").textContent=data.balance;
   });
 }
 
-// ===== CHARTS =====
-function renderCharts(){
-  const labels = members.map(m=>m[1]);
-  const contribData = members.map(m=>contributions.filter(c=>c[1]==m[0]).reduce((s,c)=>s+Number(c[2]),0));
-  const loanData = members.map(m=>loans.filter(l=>l[1]==m[0]).reduce((s,l)=>s+Number(l[2]),0));
-  new Chart(document.getElementById("contribChart"),{type:"bar",data:{labels,datasets:[{label:"Contributions",data:contribData,backgroundColor:"#3b82f6"}]}});
-  new Chart(document.getElementById("loanChart"),{type:"pie",data:{labels,datasets:[{label:"Loans",data:loanData,backgroundColor:["#ef4444","#facc15","#10b981","#3b82f6"]}]}});  
-}
-
-// ===== ADMIN ACTIONS =====
+// ===== ADMIN SELECTS =====
 function populateAdminSelects(){
   if(currentUserRole!=="admin") return;
   const contribSel=document.getElementById("contribMemberSelect"); const loanSel=document.getElementById("loanMemberSelect");
   contribSel.innerHTML=""; loanSel.innerHTML="";
-  members.forEach(m=>{
-    const opt1=document.createElement("option"); opt1.value=m[0]; opt1.textContent=m[1]; contribSel.appendChild(opt1);
-    const opt2=document.createElement("option"); opt2.value=m[0]; opt2.textContent=m[1]; loanSel.appendChild(opt2);
-  });
+  members.forEach(m=>{ const opt=document.createElement("option"); opt.value=m[0]; opt.textContent=m[1]; contribSel.appendChild(opt); const opt2=document.createElement("option"); opt2.value=m[0]; opt2.textContent=m[1]; loanSel.appendChild(opt2);});
 }
 
-// ===== ADMIN CRUD =====
+// ===== ADMIN MANAGEMENT =====
+function renderAdminManagement(){
+  if(currentUserRole!=="admin") return;
+  document.getElementById("adminManagement").classList.remove("hidden");
+
+  // Members
+  const membersTbody=document.getElementById("membersTable"); membersTbody.innerHTML="";
+  members.forEach(m=>{const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${m[0]}</td><td class="border p-2">${m[1]}</td><td class="border p-2">${m[2]}</td><td class="border p-2"><button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteMember(${m[0]})">Delete</button></td>`; membersTbody.appendChild(tr);});
+
+  // Contributions
+  const contribTbody=document.getElementById("contribTable"); contribTbody.innerHTML="";
+  contributions.forEach(c=>{const memberName=members.find(m=>m[0]==c[1])?.[1]||"Unknown"; const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${c[0]}</td><td class="border p-2">${memberName}</td><td class="border p-2">${c[2]}</td><td class="border p-2">${new Date(c[3]).toLocaleDateString()}</td><td class="border p-2"><button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteContribution(${c[0]})">Delete</button></td>`; contribTbody.appendChild(tr);});
+
+  // Loans
+  const loansTbody=document.getElementById("loansTable"); loansTbody.innerHTML="";
+  loans.forEach(l=>{const memberName=members.find(m=>m[0]==l[1])?.[1]||"Unknown"; const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${l[0]}</td><td class="border p-2">${memberName}</td><td class="border p-2">${l[2]}</td><td class="border p-2">${l[3]}</td><td class="border p-2">${new Date(l[4]).toLocaleDateString()}</td><td class="border p-2"><button class="bg-green-500 text-white px-2 py-1 rounded" onclick="updateLoanStatus(${l[0]},'Approved')">Approve</button> <button class="bg-yellow-500 text-white px-2 py-1 rounded" onclick="updateLoanStatus(${l[0]},'Rejected')">Reject</button> <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteLoan(${l[0]})">Delete</button></td>`; loansTbody.appendChild(tr);});
+}
+
+// ===== ADMIN ACTIONS =====
+function deleteMember(id){ post("deleteMember",{memberId:id}).then(()=>loadData()); }
+function deleteContribution(id){ post("deleteContribution",{contribId:id}).then(()=>loadData()); }
+function deleteLoan(id){ post("deleteLoan",{loanId:id}).then(()=>loadData()); }
+function updateLoanStatus(id,status){ post("updateLoan",{loanId:id,status}).then(()=>loadData()); }
+
+// ===== ADD ACTIONS =====
 function addMember(){ const name=document.getElementById("newMemberName").value; const phone=document.getElementById("newMemberPhone").value; post("addMember",{name,phone}).then(()=>loadData()); }
 function addContribution(){ const memberId=document.getElementById("contribMemberSelect").value; const amount=document.getElementById("contribAmount").value; post("addContribution",{memberId,amount}).then(()=>loadData()); }
 function addLoan(){ const memberId=document.getElementById("loanMemberSelect").value; const amount=document.getElementById("loanAmount").value; post("addLoan",{memberId,amount}).then(()=>loadData()); }
+
 </script>
 </body>
 </html>
