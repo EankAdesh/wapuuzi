@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chama System</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>body{font-family:sans-serif;}</style>
@@ -204,6 +206,11 @@ function addMember(){ const name=document.getElementById("newMemberName").value;
 function addContribution(){ const memberId=document.getElementById("contribMemberSelect").value; const amount=document.getElementById("contribAmount").value; post("addContribution",{memberId,amount}).then(()=>loadData()); }
 function addLoan(){ const memberId=document.getElementById("loanMemberSelect").value; const amount=document.getElementById("loanAmount").value; post("addLoan",{memberId,amount}).then(()=>loadData()); }
 
+</script>
+  <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
 </script>
 </body>
 </html>
