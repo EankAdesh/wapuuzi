@@ -144,11 +144,17 @@
   <div id="admin" class="tab space-y-4">
 
     <div class="grid md:grid-cols-3 gap-4">
+
+      <!-- Pending Members -->
       <div class="bg-white p-4 rounded shadow">
         <h2 class="font-bold mb-2">Approve Members</h2>
-        <div id="pendingMembers"></div>
+        <div id="pendingMembers" class="space-y-2">
+          <p class="text-gray-500 mb-2">Pending Members:</p>
+          <div id="pendingList"></div>
+        </div>
       </div>
 
+      <!-- Loan Settings -->
       <div class="bg-white p-4 rounded shadow">
         <h2 class="font-bold mb-2">Loan Settings</h2>
         <input id="interestRate" type="number" placeholder="Interest %" class="border p-2 w-full mb-2">
@@ -157,6 +163,7 @@
         </button>
       </div>
 
+      <!-- Create Chama -->
       <div class="bg-white p-4 rounded shadow">
         <h2 class="font-bold mb-2">Create Chama</h2>
         <input id="newChamaName" placeholder="Chama Name" class="border p-2 w-full mb-2">
@@ -165,7 +172,6 @@
         </button>
       </div>
     </div>
-
   </div>
 
   <!-- AUDIT -->
@@ -188,14 +194,10 @@
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec";
+const API = "YOUR_APPS_SCRIPT_URL";
 
 /* ===== SESSION ===== */
-const session={
-  save:d=>localStorage.setItem("chamaSession",JSON.stringify(d)),
-  get:()=>JSON.parse(localStorage.getItem("chamaSession")),
-  clear:()=>localStorage.removeItem("chamaSession")
-};
+const session={ save:d=>localStorage.setItem("chamaSession",JSON.stringify(d)), get:()=>JSON.parse(localStorage.getItem("chamaSession")), clear:()=>localStorage.removeItem("chamaSession") };
 
 let role=null, phone=null, chamaId=null;
 let members=[], contributions=[], loans=[], audits=[];
@@ -205,19 +207,13 @@ const money=n=>Number(n).toLocaleString("en-KE",{style:"currency",currency:"KES"
 const showLoader=()=>loader.classList.remove("hidden");
 const hideLoader=()=>loader.classList.add("hidden");
 
-function post(action,data={}) {
-  return fetch(API,{method:"POST",body:JSON.stringify({action,...data})})
-    .then(r=>r.json());
-}
+function post(action,data={}) { return fetch(API,{method:"POST",body:JSON.stringify({action,...data})}).then(r=>r.json()); }
 
 /* ===== LOGIN ===== */
 function login(){
   showLoader();
-  post("login",{
-    phone:phone.value,
-    password:password.value,
-    chamaId:chamaSelect.value
-  }).then(d=>{
+  post("login",{ phone:phone.value, password:password.value, chamaId:chamaSelect.value })
+  .then(d=>{
     if(!d.success) return alert("Login failed");
     role=d.role; phone=phone.value; chamaId=chamaSelect.value;
     session.save({role,phone,chamaId});
@@ -271,18 +267,7 @@ function render(d,s,l,a){
 /* ===== CHART ===== */
 function renderChart(d){
   if(chart) chart.destroy();
-  chart=new Chart(financeChart,{
-    type:"bar",
-    data:{
-      labels:["Contributions","Loans","Interest","Balance"],
-      datasets:[{data:[
-        d.totalContrib,
-        d.totalLoans,
-        d.totalInterest,
-        d.balance
-      ]}]
-    }
-  });
+  chart=new Chart(financeChart,{ type:"bar", data:{ labels:["Contributions","Loans","Interest","Balance"], datasets:[{data:[ d.totalContrib,d.totalLoans,d.totalInterest,d.balance ]}] } });
 }
 
 /* ===== STATEMENT ===== */
@@ -326,27 +311,61 @@ function renderAudit(a){
   });
 }
 
+/* ===== PENDING MEMBERS ===== */
+function loadPendingMembers() {
+  post("getDashboard", { chamaId }).then(d => {
+    const pending = d.members.filter(m => !m.approved);
+    const container = document.getElementById("pendingList");
+    container.innerHTML = "";
+
+    if (!pending.length) {
+      container.innerHTML = "<p class='text-gray-400'>No pending members</p>";
+      return;
+    }
+
+    pending.forEach(m => {
+      const div = document.createElement("div");
+      div.className = "flex justify-between items-center bg-gray-100 p-2 rounded";
+      div.innerHTML = `<span>${m.name} (${m.phone})</span><button class="bg-green-600 text-white px-2 py-1 rounded">Approve</button>`;
+      div.querySelector("button").onclick = () => approveMember(m.id);
+      container.appendChild(div);
+    });
+  });
+}
+
+function approveMember(memberId) {
+  if (!confirm("Approve this member?")) return;
+  showLoader();
+  post("approveMember", { memberId, chamaId })
+    .then(res => {
+      if (res.success) {
+        alert("Member approved!");
+        loadPendingMembers();
+        loadData();
+      } else alert("Failed to approve member.");
+    })
+    .finally(hideLoader);
+}
+
+adminBtn.onclick = () => {
+  showTab('admin');
+  loadPendingMembers();
+};
+
 /* ===== ACTIONS ===== */
 function downloadPDF(){ post("getPDF",{chamaId}).then(d=>window.open(d.url)); }
 function saveInterest(){ post("setInterest",{rate:interestRate.value,chamaId}); }
 function createChama(){ post("createChama",{name:newChamaName.value}); }
 
 /* ===== TABS ===== */
-function showTab(id){
-  document.querySelectorAll(".tab").forEach(t=>t.style.display="none");
-  document.getElementById(id).style.display="block";
-}
+function showTab(id){ document.querySelectorAll(".tab").forEach(t=>t.style.display="none"); document.getElementById(id).style.display="block"; }
 
 /* ===== AUTO LOGIN ===== */
-window.onload=()=>{
-  const s=session.get();
-  if(s){ role=s.role; phone=s.phone; chamaId=s.chamaId; init(); }
-};
+window.onload=()=>{ const s=session.get(); if(s){ role=s.role; phone=s.phone; chamaId=s.chamaId; init(); } };
 
 /* ===== PWA ===== */
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("service-worker.js");
-}
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("service-worker.js"); }
+
 </script>
 
 </body>
