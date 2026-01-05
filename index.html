@@ -20,7 +20,6 @@
   .tab { display: none; }
 </style>
 </head>
-
 <body class="bg-gray-100">
 
 <!-- LOADER -->
@@ -97,7 +96,6 @@
   <div id="statement" class="tab space-y-4">
     <div class="bg-white p-4 rounded shadow">
       <select id="memberSelect" class="border p-2 rounded w-full mb-3"></select>
-
       <table class="w-full border text-sm">
         <thead class="bg-gray-200">
           <tr>
@@ -109,13 +107,11 @@
         </thead>
         <tbody id="statementBody"></tbody>
       </table>
-
       <div class="mt-3 font-bold space-y-1">
         <p>Contributions: <span id="statementContrib">0</span></p>
         <p>Loans + Interest: <span id="statementLoans">0</span></p>
         <p>Balance: <span id="statementBalance">0</span></p>
       </div>
-
       <button onclick="downloadPDF()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded">
         Download PDF
       </button>
@@ -142,19 +138,11 @@
 
   <!-- ADMIN -->
   <div id="admin" class="tab space-y-4">
-
     <div class="grid md:grid-cols-3 gap-4">
-
-      <!-- Pending Members -->
       <div class="bg-white p-4 rounded shadow">
         <h2 class="font-bold mb-2">Approve Members</h2>
-        <div id="pendingMembers" class="space-y-2">
-          <p class="text-gray-500 mb-2">Pending Members:</p>
-          <div id="pendingList"></div>
-        </div>
+        <div id="pendingMembers"></div>
       </div>
-
-      <!-- Loan Settings -->
       <div class="bg-white p-4 rounded shadow">
         <h2 class="font-bold mb-2">Loan Settings</h2>
         <input id="interestRate" type="number" placeholder="Interest %" class="border p-2 w-full mb-2">
@@ -162,8 +150,6 @@
           Save Interest Rate
         </button>
       </div>
-
-      <!-- Create Chama -->
       <div class="bg-white p-4 rounded shadow">
         <h2 class="font-bold mb-2">Create Chama</h2>
         <input id="newChamaName" placeholder="Chama Name" class="border p-2 w-full mb-2">
@@ -194,69 +180,79 @@
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec";
+const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec"; // Replace with your Apps Script URL
 
 /* ===== SESSION ===== */
-const session={ save:d=>localStorage.setItem("chamaSession",JSON.stringify(d)), get:()=>JSON.parse(localStorage.getItem("chamaSession")), clear:()=>localStorage.removeItem("chamaSession") };
+const session = {
+  save: d => localStorage.setItem("chamaSession", JSON.stringify(d)),
+  get: () => JSON.parse(localStorage.getItem("chamaSession")),
+  clear: () => localStorage.removeItem("chamaSession")
+};
 
-let role=null, phone=null, chamaId=null;
-let members=[], contributions=[], loans=[], audits=[];
-let chart=null;
+let role = null, phone = null, chamaId = null;
+let members = [], contributions = [], loans = [], audits = [];
+let chart = null;
 
-const money=n=>Number(n).toLocaleString("en-KE",{style:"currency",currency:"KES"});
-const showLoader=()=>loader.classList.remove("hidden");
-const hideLoader=()=>loader.classList.add("hidden");
+const money = n => Number(n).toLocaleString("en-KE", { style: "currency", currency: "KES" });
+const showLoader = () => loader.classList.remove("hidden");
+const hideLoader = () => loader.classList.add("hidden");
 
-function post(action,data={}) { return fetch(API,{method:"POST",body:JSON.stringify({action,...data})}).then(r=>r.json()); }
+function post(action, data = {}) {
+  return fetch(API, { method: "POST", body: JSON.stringify({ action, ...data }) }).then(r => r.json());
+}
 
 /* ===== LOGIN ===== */
-function login(){
+function login() {
   showLoader();
-  post("login",{ phone:phone.value, password:password.value, chamaId:chamaSelect.value })
-  .then(d=>{
-    if(!d.success) return alert("Login failed");
-    role=d.role; phone=phone.value; chamaId=chamaSelect.value;
-    session.save({role,phone,chamaId});
+  post("login", {
+    phone: phone.value,
+    password: password.value,
+    chamaId: chamaSelect.value
+  }).then(d => {
+    if (!d.success) return alert(d.message || "Login failed");
+    role = d.role; phone = phone.value; chamaId = chamaSelect.value;
+    session.save({ role, phone, chamaId });
     init();
   }).finally(hideLoader);
 }
 
-function logout(){ session.clear(); location.reload(); }
+function logout() { session.clear(); location.reload(); }
 
 /* ===== INIT ===== */
-function init(){
+function init() {
   loginPage.classList.add("hidden");
   dashboardPage.classList.remove("hidden");
-  userRole.textContent=role.toUpperCase();
-  currentChama.textContent=chamaId;
-  if(role==="admin"){ adminBtn.classList.remove("hidden"); auditBtn.classList.remove("hidden"); }
+  userRole.textContent = role.toUpperCase();
+  currentChama.textContent = chamaId;
+  if (role === "admin") { adminBtn.classList.remove("hidden"); auditBtn.classList.remove("hidden"); }
   loadData();
 }
 
 /* ===== DATA ===== */
-function loadData(){
+function loadData() {
   showLoader();
   Promise.all([
-    post("getDashboard",{chamaId}),
-    post("getStatement",{chamaId}),
-    post("getLoans",{chamaId}),
-    post("getAudit",{chamaId})
-  ]).then(([d,s,l,a])=>{
-    members=d.members;
-    contributions=d.contributions;
-    loans=l;
-    audits=a;
-    render(d,s,l,a);
+    post("getDashboard", { chamaId }),
+    post("getStatement", { chamaId }),
+    post("getLoans", { chamaId }),
+    post("getAudit", { chamaId })
+  ]).then(([d, s, l, a]) => {
+    members = d.members;
+    contributions = d.contributions;
+    loans = l;
+    audits = a;
+    render(d, s, l, a);
+    if (role === "admin") renderPendingMembers();
   }).finally(hideLoader);
 }
 
 /* ===== RENDER ===== */
-function render(d,s,l,a){
-  totalMembers.textContent=d.members.length;
-  totalContrib.textContent=money(d.totalContrib);
-  totalLoans.textContent=money(d.totalLoans);
-  totalInterest.textContent=money(d.totalInterest);
-  totalBalance.textContent=money(d.balance);
+function render(d, s, l, a) {
+  totalMembers.textContent = d.members.length;
+  totalContrib.textContent = money(d.totalContrib);
+  totalLoans.textContent = money(d.totalLoans);
+  totalInterest.textContent = money(d.totalInterest);
+  totalBalance.textContent = money(d.balance);
 
   renderChart(d);
   renderStatement(s);
@@ -265,30 +261,36 @@ function render(d,s,l,a){
 }
 
 /* ===== CHART ===== */
-function renderChart(d){
-  if(chart) chart.destroy();
-  chart=new Chart(financeChart,{ type:"bar", data:{ labels:["Contributions","Loans","Interest","Balance"], datasets:[{data:[ d.totalContrib,d.totalLoans,d.totalInterest,d.balance ]}] } });
+function renderChart(d) {
+  if (chart) chart.destroy();
+  chart = new Chart(financeChart, {
+    type: "bar",
+    data: {
+      labels: ["Contributions", "Loans", "Interest", "Balance"],
+      datasets: [{ data: [d.totalContrib, d.totalLoans, d.totalInterest, d.balance], backgroundColor: ["#3b82f6", "#ef4444", "#f59e0b", "#10b981"] }]
+    }
+  });
 }
 
 /* ===== STATEMENT ===== */
-function renderStatement(s){
-  statementBody.innerHTML="";
-  s.forEach(r=>{
-    statementBody.innerHTML+=`
+function renderStatement(s) {
+  statementBody.innerHTML = "";
+  s.forEach(r => {
+    statementBody.innerHTML += `
       <tr>
         <td class="border p-2">${new Date(r.date).toLocaleDateString()}</td>
         <td class="border p-2">${r.type}</td>
         <td class="border p-2">${money(r.amount)}</td>
-        <td class="border p-2">${r.details||""}</td>
+        <td class="border p-2">${r.details || ""}</td>
       </tr>`;
   });
 }
 
 /* ===== LOANS ===== */
-function renderLoans(l){
-  loansTable.innerHTML="";
-  l.forEach(r=>{
-    loansTable.innerHTML+=`
+function renderLoans(l) {
+  loansTable.innerHTML = "";
+  l.forEach(r => {
+    loansTable.innerHTML += `
       <tr>
         <td class="border p-2">${money(r.amount)}</td>
         <td class="border p-2">${money(r.interest)}</td>
@@ -299,10 +301,10 @@ function renderLoans(l){
 }
 
 /* ===== AUDIT ===== */
-function renderAudit(a){
-  auditTable.innerHTML="";
-  a.forEach(r=>{
-    auditTable.innerHTML+=`
+function renderAudit(a) {
+  auditTable.innerHTML = "";
+  a.forEach(r => {
+    auditTable.innerHTML += `
       <tr>
         <td class="border p-2">${new Date(r.date).toLocaleString()}</td>
         <td class="border p-2">${r.user}</td>
@@ -312,59 +314,45 @@ function renderAudit(a){
 }
 
 /* ===== PENDING MEMBERS ===== */
-function loadPendingMembers() {
-  post("getDashboard", { chamaId }).then(d => {
-    const pending = d.members.filter(m => !m.approved);
-    const container = document.getElementById("pendingList");
-    container.innerHTML = "";
-
-    if (!pending.length) {
-      container.innerHTML = "<p class='text-gray-400'>No pending members</p>";
-      return;
-    }
-
-    pending.forEach(m => {
-      const div = document.createElement("div");
-      div.className = "flex justify-between items-center bg-gray-100 p-2 rounded";
-      div.innerHTML = `<span>${m.name} (${m.phone})</span><button class="bg-green-600 text-white px-2 py-1 rounded">Approve</button>`;
-      div.querySelector("button").onclick = () => approveMember(m.id);
-      container.appendChild(div);
-    });
+function renderPendingMembers() {
+  pendingMembers.innerHTML = "";
+  const pending = members.filter(m => !m.approved);
+  if (pending.length === 0) {
+    pendingMembers.innerHTML = "<p>No pending members</p>";
+    return;
+  }
+  pending.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "flex justify-between items-center border p-2 mb-2 rounded";
+    div.innerHTML = `<span>${m.name} (${m.phone})</span>
+                     <button class="bg-green-600 text-white px-2 py-1 rounded">Approve</button>`;
+    div.querySelector("button").onclick = () => {
+      showLoader();
+      post("approveMember", { memberId: m.id, chamaId }).then(res => { if (res.success) loadData(); }).finally(hideLoader);
+    };
+    pendingMembers.appendChild(div);
   });
 }
 
-function approveMember(memberId) {
-  if (!confirm("Approve this member?")) return;
-  showLoader();
-  post("approveMember", { memberId, chamaId })
-    .then(res => {
-      if (res.success) {
-        alert("Member approved!");
-        loadPendingMembers();
-        loadData();
-      } else alert("Failed to approve member.");
-    })
-    .finally(hideLoader);
-}
-
-adminBtn.onclick = () => {
-  showTab('admin');
-  loadPendingMembers();
-};
-
 /* ===== ACTIONS ===== */
-function downloadPDF(){ post("getPDF",{chamaId}).then(d=>window.open(d.url)); }
-function saveInterest(){ post("setInterest",{rate:interestRate.value,chamaId}); }
-function createChama(){ post("createChama",{name:newChamaName.value}); }
+function downloadPDF() { post("getPDF", { chamaId }).then(d => window.open(d.url)); }
+function saveInterest() { post("setInterest", { rate: interestRate.value, chamaId }); }
+function createChama() { post("createChama", { name: newChamaName.value }); }
 
 /* ===== TABS ===== */
-function showTab(id){ document.querySelectorAll(".tab").forEach(t=>t.style.display="none"); document.getElementById(id).style.display="block"; }
+function showTab(id) {
+  document.querySelectorAll(".tab").forEach(t => t.style.display = "none");
+  document.getElementById(id).style.display = "block";
+}
 
 /* ===== AUTO LOGIN ===== */
-window.onload=()=>{ const s=session.get(); if(s){ role=s.role; phone=s.phone; chamaId=s.chamaId; init(); } };
+window.onload = () => {
+  const s = session.get();
+  if (s) { role = s.role; phone = s.phone; chamaId = s.chamaId; init(); }
+};
 
 /* ===== PWA ===== */
-if("serviceWorker" in navigator){ navigator.serviceWorker.register("service-worker.js"); }
+if ("serviceWorker" in navigator) { navigator.serviceWorker.register("service-worker.js"); }
 
 </script>
 
