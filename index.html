@@ -4,13 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chama System</title>
+
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2563eb">
+
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>body{font-family:sans-serif;}</style>
+
+<style>
+  body { font-family: system-ui, sans-serif; }
+  .tab { display: none; }
+</style>
 </head>
+
 <body class="bg-gray-100">
+
+<!-- LOADER -->
+<div id="loader" class="fixed inset-0 bg-white bg-opacity-70 flex items-center justify-center hidden z-50">
+  <div class="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+</div>
 
 <!-- LOGIN -->
 <div id="loginPage" class="flex items-center justify-center h-screen">
@@ -23,194 +39,270 @@
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboardPage" class="hidden p-4 max-w-7xl mx-auto space-y-6">
-  <h1 class="text-3xl font-bold">Chama Dashboard</h1>
-  <p>Logged in as: <span id="userRole"></span></p>
+<div id="dashboardPage" class="hidden max-w-7xl mx-auto p-4 space-y-4">
 
-  <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Members</p><p id="totalMembers" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Total Contributions</p><p id="totalContrib" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Total Loans</p><p id="totalLoans" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Balance</p><p id="totalBalance" class="text-2xl font-bold">0</p></div>
-    <div class="bg-white p-4 rounded shadow text-center"><p class="text-gray-500">Overdue Loans</p><p id="overdueLoans" class="text-2xl font-bold text-red-600">0</p></div>
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold">Chama Dashboard</h1>
+    <button onclick="logout()" class="text-red-600 font-semibold">Logout</button>
   </div>
 
-  <!-- ADMIN PANEL -->
-  <div id="adminPanel" class="grid grid-cols-1 md:grid-cols-3 gap-4 hidden mt-4">
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-semibold mb-2">Add Member</h2>
-      <input id="newMemberName" placeholder="Name" class="border p-2 rounded w-full mb-2">
-      <input id="newMemberPhone" placeholder="Phone" class="border p-2 rounded w-full mb-2">
-      <button onclick="addMember()" class="bg-green-600 text-white px-4 py-2 rounded w-full">Add Member</button>
+  <p>Logged in as: <b id="userRole"></b></p>
+
+  <!-- NAV -->
+  <div class="flex gap-2 bg-white p-2 rounded shadow overflow-x-auto">
+    <button onclick="showTab('overview')" class="px-4 py-2 bg-blue-600 text-white rounded">Overview</button>
+    <button onclick="showTab('statement')" class="px-4 py-2 bg-gray-200 rounded">Statement</button>
+    <button id="adminBtn" onclick="showTab('admin')" class="px-4 py-2 bg-gray-200 rounded hidden">Admin</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="overview" class="tab block space-y-4">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-gray-500">Members</p>
+        <p id="totalMembers" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-gray-500">Contributions</p>
+        <p id="totalContrib" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-gray-500">Loans</p>
+        <p id="totalLoans" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-gray-500">Balance</p>
+        <p id="totalBalance" class="text-2xl font-bold">0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <p class="text-gray-500">Overdue</p>
+        <p id="overdueLoans" class="text-2xl font-bold text-red-600">0</p>
+      </div>
     </div>
+
     <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-semibold mb-2">Add Contribution</h2>
-      <select id="contribMemberSelect" class="border p-2 rounded w-full mb-2"></select>
-      <input id="contribAmount" type="number" placeholder="Amount" class="border p-2 rounded w-full mb-2">
-      <button onclick="addContribution()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Add Contribution</button>
-    </div>
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-semibold mb-2">Add Loan</h2>
-      <select id="loanMemberSelect" class="border p-2 rounded w-full mb-2"></select>
-      <input id="loanAmount" type="number" placeholder="Amount" class="border p-2 rounded w-full mb-2">
-      <button onclick="addLoan()" class="bg-red-600 text-white px-4 py-2 rounded w-full">Add Loan</button>
+      <canvas id="financeChart"></canvas>
     </div>
   </div>
 
-  <!-- MEMBER STATEMENT -->
-  <div class="bg-white p-4 rounded shadow mt-4">
-    <h2 class="text-xl font-semibold mb-3">Member Statement</h2>
-    <select id="memberSelect" class="border p-2 rounded mb-3 w-full md:w-1/3"></select>
-    <table class="w-full table-auto border-collapse border mb-3">
-      <thead class="bg-gray-200">
-        <tr><th class="border p-2">Date</th><th class="border p-2">Type</th><th class="border p-2">Amount</th><th class="border p-2">Status</th></tr>
-      </thead>
-      <tbody id="statementBody"></tbody>
-    </table>
-    <p class="font-bold">Total Contributions: <span id="statementContrib">0</span></p>
-    <p class="font-bold">Total Loans: <span id="statementLoans">0</span></p>
-    <p class="font-bold">Balance: <span id="statementBalance">0</span></p>
+  <!-- STATEMENT -->
+  <div id="statement" class="tab space-y-4">
+    <div class="bg-white p-4 rounded shadow">
+      <select id="memberSelect" class="border p-2 rounded w-full mb-3"></select>
+
+      <table class="w-full border text-sm">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border p-2">Date</th>
+            <th class="border p-2">Type</th>
+            <th class="border p-2">Amount</th>
+            <th class="border p-2">Status</th>
+          </tr>
+        </thead>
+        <tbody id="statementBody"></tbody>
+      </table>
+
+      <div class="mt-3 font-bold space-y-1">
+        <p>Contributions: <span id="statementContrib">0</span></p>
+        <p>Loans: <span id="statementLoans">0</span></p>
+        <p>Balance: <span id="statementBalance">0</span></p>
+      </div>
+    </div>
   </div>
 
-  <!-- ADMIN MANAGEMENT TABLES -->
-  <div id="adminManagement" class="mt-6 hidden">
-    <h2 class="text-xl font-bold mb-2">Manage Members</h2>
-    <table class="w-full table-auto border-collapse border mb-4">
-      <thead class="bg-gray-200">
-        <tr><th class="border p-2">ID</th><th class="border p-2">Name</th><th class="border p-2">Phone</th><th class="border p-2">Actions</th></tr>
-      </thead>
-      <tbody id="membersTable"></tbody>
-    </table>
+  <!-- ADMIN -->
+  <div id="admin" class="tab space-y-4">
 
-    <h2 class="text-xl font-bold mb-2">Manage Contributions</h2>
-    <table class="w-full table-auto border-collapse border mb-4">
-      <thead class="bg-gray-200">
-        <tr><th class="border p-2">ID</th><th class="border p-2">Member</th><th class="border p-2">Amount</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr>
-      </thead>
-      <tbody id="contribTable"></tbody>
-    </table>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-bold mb-2">Add Member</h2>
+        <input id="newMemberName" placeholder="Name" class="border p-2 w-full mb-2">
+        <input id="newMemberPhone" placeholder="Phone" class="border p-2 w-full mb-2">
+        <button onclick="addMember()" class="bg-green-600 text-white px-4 py-2 rounded w-full">Add</button>
+      </div>
 
-    <h2 class="text-xl font-bold mb-2">Manage Loans</h2>
-    <table class="w-full table-auto border-collapse border mb-4">
-      <thead class="bg-gray-200">
-        <tr><th class="border p-2">ID</th><th class="border p-2">Member</th><th class="border p-2">Amount</th><th class="border p-2">Status</th><th class="border p-2">Date</th><th class="border p-2">Actions</th></tr>
-      </thead>
-      <tbody id="loansTable"></tbody>
-    </table>
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-bold mb-2">Add Contribution</h2>
+        <select id="contribMemberSelect" class="border p-2 w-full mb-2"></select>
+        <input id="contribAmount" type="number" placeholder="Amount" class="border p-2 w-full mb-2">
+        <button onclick="addContribution()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Add</button>
+      </div>
+
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="font-bold mb-2">Add Loan</h2>
+        <select id="loanMemberSelect" class="border p-2 w-full mb-2"></select>
+        <input id="loanAmount" type="number" placeholder="Amount" class="border p-2 w-full mb-2">
+        <button onclick="addLoan()" class="bg-red-600 text-white px-4 py-2 rounded w-full">Add</button>
+      </div>
+    </div>
+
   </div>
 
 </div>
 
 <script>
-const API = "YOUR_APPS_SCRIPT_URL"; // replace with your deployed script URL
-let currentUserRole=null, loggedInPhone=null, members=[], contributions=[], loans=[];
+const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec";
 
-// ===== LOGIN =====
+// ---------- SESSION ----------
+const session = {
+  save:d=>localStorage.setItem("chamaSession",JSON.stringify(d)),
+  get:()=>JSON.parse(localStorage.getItem("chamaSession")),
+  clear:()=>localStorage.removeItem("chamaSession")
+};
+
+let role=null, phone=null;
+let members=[], contributions=[], loans=[];
+let chart=null;
+
+// ---------- HELPERS ----------
+const money = n => Number(n).toLocaleString("en-KE",{style:"currency",currency:"KES"});
+const showLoader = ()=>loader.classList.remove("hidden");
+const hideLoader = ()=>loader.classList.add("hidden");
+
+function post(action,data={}) {
+  return fetch(API,{method:"POST",body:JSON.stringify({action,...data})})
+    .then(r=>r.json());
+}
+
+// ---------- LOGIN ----------
 function login(){
-  const phone=document.getElementById("phone").value;
-  const password=document.getElementById("password").value;
-  fetch(API,{method:"POST",body:JSON.stringify({action:"login",phone,password})})
-  .then(r=>r.json())
-  .then(data=>{
-    if(data.success){
-      currentUserRole=data.role; loggedInPhone=phone;
-      document.getElementById("userRole").textContent=currentUserRole.toUpperCase();
-      document.getElementById("loginPage").classList.add("hidden");
-      document.getElementById("dashboardPage").classList.remove("hidden");
-      if(currentUserRole==="admin") document.getElementById("adminPanel").classList.remove("hidden");
-      loadData();
-    } else alert(data.message);
-  });
+  showLoader();
+  post("login",{phone:phone.value,password:password.value})
+  .then(d=>{
+    if(!d.success) return alert("Invalid login");
+    role=d.role; phone=phone.value;
+    session.save({role,phone});
+    init();
+  }).finally(hideLoader);
 }
 
-// ===== POST HELPER =====
-function post(action, payload={}){ return fetch(API,{method:"POST",body:JSON.stringify({action,...payload})}).then(r=>r.json()); }
+function logout(){
+  session.clear();
+  location.reload();
+}
 
-// ===== LOAD DATA =====
+// ---------- INIT ----------
+function init(){
+  loginPage.classList.add("hidden");
+  dashboardPage.classList.remove("hidden");
+  userRole.textContent = role.toUpperCase();
+  if(role==="admin") adminBtn.classList.remove("hidden");
+  loadData();
+}
+
+// ---------- DATA ----------
 function loadData(){
-  Promise.all([post("getMembers"),post("getContributions"),post("getLoans")])
-  .then(([m,c,l])=>{
-    members=m.slice(1); contributions=c.slice(1); loans=l.slice(1);
-    renderDashboard(); renderMemberSelect(); populateAdminSelects(); renderAdminManagement();
+  showLoader();
+  Promise.all([
+    post("getMembers"),
+    post("getContributions"),
+    post("getLoans")
+  ]).then(([m,c,l])=>{
+    members=m.slice(1);
+    contributions=c.slice(1);
+    loans=l.slice(1);
+    render();
+  }).finally(hideLoader);
+}
+
+// ---------- RENDER ----------
+function render(){
+  const visible = role==="admin"?members:members.filter(m=>m[2]===phone);
+  const tc = contributions.filter(c=>visible.some(m=>m[0]==c[1])).reduce((s,c)=>s+Number(c[2]),0);
+  const tl = loans.filter(l=>visible.some(m=>m[0]==l[1])).reduce((s,l)=>s+Number(l[2]),0);
+
+  totalMembers.textContent = visible.length;
+  totalContrib.textContent = money(tc);
+  totalLoans.textContent = money(tl);
+  totalBalance.textContent = money(tc-tl);
+  overdueLoans.textContent = loans.filter(l=>new Date()-new Date(l[4])>30*86400000).length;
+
+  renderChart(tc,tl);
+  renderStatementSelect();
+  populateAdminSelects();
+}
+
+// ---------- CHART ----------
+function renderChart(c,l){
+  if(chart) chart.destroy();
+  chart = new Chart(financeChart,{
+    type:"bar",
+    data:{
+      labels:["Contributions","Loans","Balance"],
+      datasets:[{data:[c,l,c-l]}]
+    }
   });
 }
 
-// ===== DASHBOARD =====
-function renderDashboard(){
-  const visibleMembers=currentUserRole==="admin"?members:members.filter(m=>m[2]===loggedInPhone);
-  const totalContrib = contributions.filter(c=>visibleMembers.some(m=>m[0]==c[1])).reduce((s,c)=>s+Number(c[2]),0);
-  const totalLoans = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1])).reduce((s,l)=>s+Number(l[2]),0);
-  document.getElementById("totalMembers").textContent=visibleMembers.length;
-  document.getElementById("totalContrib").textContent=totalContrib;
-  document.getElementById("totalLoans").textContent=totalLoans;
-  document.getElementById("totalBalance").textContent=totalContrib-totalLoans;
-  const overdueCount = loans.filter(l=>visibleMembers.some(m=>m[0]==l[1]) && ((new Date()-new Date(l[4]))/(1000*60*60*24))>30).length;
-  document.getElementById("overdueLoans").textContent=overdueCount;
-}
-
-// ===== MEMBER SELECT =====
-function renderMemberSelect(){
-  const sel=document.getElementById("memberSelect"); sel.innerHTML="";
-  const visibleMembers=currentUserRole==="admin"?members:members.filter(m=>m[2]===loggedInPhone);
-  visibleMembers.forEach(m=>{ const opt=document.createElement("option"); opt.value=m[0]; opt.textContent=m[1]; sel.appendChild(opt); });
-  sel.onchange=showStatement; if(sel.options.length>0) sel.selectedIndex=0; showStatement();
+// ---------- STATEMENT ----------
+function renderStatementSelect(){
+  memberSelect.innerHTML="";
+  const list = role==="admin"?members:members.filter(m=>m[2]===phone);
+  list.forEach(m=>{
+    const o=document.createElement("option");
+    o.value=m[0]; o.textContent=m[1];
+    memberSelect.appendChild(o);
+  });
+  showStatement();
 }
 
 function showStatement(){
-  const memberId=document.getElementById("memberSelect").value; if(!memberId) return;
-  post("memberStatement",{memberId}).then(data=>{
-    if(!data.success) return;
-    const tbody=document.getElementById("statementBody"); tbody.innerHTML="";
-    data.contributions.forEach(c=>{const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${new Date(c.date).toLocaleDateString()}</td><td class="border p-2">Contribution</td><td class="border p-2">${c.amount}</td><td class="border p-2">-</td>`; tbody.appendChild(tr);});
-    data.loans.forEach(l=>{const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${new Date(l.date).toLocaleDateString()}</td><td class="border p-2">Loan</td><td class="border p-2">${l.amount}</td><td class="border p-2 ${l.overdue?'text-red-600 font-bold':''}">${l.status}${l.overdue?' (Overdue)':''}</td>`; tbody.appendChild(tr);});
-    document.getElementById("statementContrib").textContent=data.totalContributions;
-    document.getElementById("statementLoans").textContent=data.totalLoans;
-    document.getElementById("statementBalance").textContent=data.balance;
+  post("memberStatement",{memberId:memberSelect.value}).then(d=>{
+    statementBody.innerHTML="";
+    d.contributions.forEach(r=>{
+      statementBody.innerHTML+=`<tr>
+        <td class="border p-2">${new Date(r.date).toLocaleDateString()}</td>
+        <td class="border p-2">Contribution</td>
+        <td class="border p-2">${money(r.amount)}</td>
+        <td class="border p-2">-</td></tr>`;
+    });
+    d.loans.forEach(r=>{
+      statementBody.innerHTML+=`<tr>
+        <td class="border p-2">${new Date(r.date).toLocaleDateString()}</td>
+        <td class="border p-2">Loan</td>
+        <td class="border p-2">${money(r.amount)}</td>
+        <td class="border p-2 ${r.overdue?'text-red-600 font-bold':''}">${r.status}</td></tr>`;
+    });
+    statementContrib.textContent=money(d.totalContributions);
+    statementLoans.textContent=money(d.totalLoans);
+    statementBalance.textContent=money(d.balance);
   });
 }
 
-// ===== ADMIN SELECTS =====
+// ---------- ADMIN ----------
 function populateAdminSelects(){
-  if(currentUserRole!=="admin") return;
-  const contribSel=document.getElementById("contribMemberSelect"); const loanSel=document.getElementById("loanMemberSelect");
-  contribSel.innerHTML=""; loanSel.innerHTML="";
-  members.forEach(m=>{ const opt=document.createElement("option"); opt.value=m[0]; opt.textContent=m[1]; contribSel.appendChild(opt); const opt2=document.createElement("option"); opt2.value=m[0]; opt2.textContent=m[1]; loanSel.appendChild(opt2);});
+  if(role!=="admin") return;
+  [contribMemberSelect,loanMemberSelect].forEach(s=>{
+    s.innerHTML="";
+    members.forEach(m=>{
+      const o=document.createElement("option");
+      o.value=m[0]; o.textContent=m[1];
+      s.appendChild(o);
+    });
+  });
 }
 
-// ===== ADMIN MANAGEMENT =====
-function renderAdminManagement(){
-  if(currentUserRole!=="admin") return;
-  document.getElementById("adminManagement").classList.remove("hidden");
+function addMember(){ post("addMember",{name:newMemberName.value,phone:newMemberPhone.value}).then(loadData); }
+function addContribution(){ post("addContribution",{memberId:contribMemberSelect.value,amount:contribAmount.value}).then(loadData); }
+function addLoan(){ post("addLoan",{memberId:loanMemberSelect.value,amount:loanAmount.value}).then(loadData); }
 
-  // Members
-  const membersTbody=document.getElementById("membersTable"); membersTbody.innerHTML="";
-  members.forEach(m=>{const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${m[0]}</td><td class="border p-2">${m[1]}</td><td class="border p-2">${m[2]}</td><td class="border p-2"><button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteMember(${m[0]})">Delete</button></td>`; membersTbody.appendChild(tr);});
-
-  // Contributions
-  const contribTbody=document.getElementById("contribTable"); contribTbody.innerHTML="";
-  contributions.forEach(c=>{const memberName=members.find(m=>m[0]==c[1])?.[1]||"Unknown"; const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${c[0]}</td><td class="border p-2">${memberName}</td><td class="border p-2">${c[2]}</td><td class="border p-2">${new Date(c[3]).toLocaleDateString()}</td><td class="border p-2"><button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteContribution(${c[0]})">Delete</button></td>`; contribTbody.appendChild(tr);});
-
-  // Loans
-  const loansTbody=document.getElementById("loansTable"); loansTbody.innerHTML="";
-  loans.forEach(l=>{const memberName=members.find(m=>m[0]==l[1])?.[1]||"Unknown"; const tr=document.createElement("tr"); tr.innerHTML=`<td class="border p-2">${l[0]}</td><td class="border p-2">${memberName}</td><td class="border p-2">${l[2]}</td><td class="border p-2">${l[3]}</td><td class="border p-2">${new Date(l[4]).toLocaleDateString()}</td><td class="border p-2"><button class="bg-green-500 text-white px-2 py-1 rounded" onclick="updateLoanStatus(${l[0]},'Approved')">Approve</button> <button class="bg-yellow-500 text-white px-2 py-1 rounded" onclick="updateLoanStatus(${l[0]},'Rejected')">Reject</button> <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="deleteLoan(${l[0]})">Delete</button></td>`; loansTbody.appendChild(tr);});
+// ---------- TABS ----------
+function showTab(id){
+  document.querySelectorAll(".tab").forEach(t=>t.style.display="none");
+  document.getElementById(id).style.display="block";
 }
 
-// ===== ADMIN ACTIONS =====
-function deleteMember(id){ post("deleteMember",{memberId:id}).then(()=>loadData()); }
-function deleteContribution(id){ post("deleteContribution",{contribId:id}).then(()=>loadData()); }
-function deleteLoan(id){ post("deleteLoan",{loanId:id}).then(()=>loadData()); }
-function updateLoanStatus(id,status){ post("updateLoan",{loanId:id,status}).then(()=>loadData()); }
+// ---------- AUTO LOGIN ----------
+window.onload = ()=>{
+  const s=session.get();
+  if(s){ role=s.role; phone=s.phone; init(); }
+};
 
-// ===== ADD ACTIONS =====
-function addMember(){ const name=document.getElementById("newMemberName").value; const phone=document.getElementById("newMemberPhone").value; post("addMember",{name,phone}).then(()=>loadData()); }
-function addContribution(){ const memberId=document.getElementById("contribMemberSelect").value; const amount=document.getElementById("contribAmount").value; post("addContribution",{memberId,amount}).then(()=>loadData()); }
-function addLoan(){ const memberId=document.getElementById("loanMemberSelect").value; const amount=document.getElementById("loanAmount").value; post("addLoan",{memberId,amount}).then(()=>loadData()); }
-
-</script>
-  <script>
-if ("serviceWorker" in navigator) {
+// ---------- PWA ----------
+if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
 }
 </script>
+
 </body>
 </html>
