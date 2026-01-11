@@ -1,354 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chama Management System</title>
-
-<!-- Tailwind CSS -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-  body { font-family: system-ui, sans-serif; }
-  .tab { display: none; }
-  #loader { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.7); z-index: 50; justify-content: center; align-items: center; }
-</style>
+<title>Chama System</title>
 </head>
+
 <body class="bg-gray-100">
 
-<!-- LOADER -->
-<div id="loader">
-  <div class="animate-spin h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-</div>
-
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="flex items-center justify-center h-screen">
-  <div class="bg-white p-8 rounded shadow w-full max-w-md">
-    <h1 class="text-2xl font-bold mb-4 text-center">Chama Login</h1>
-    <input id="phone" placeholder="Phone" class="border p-2 w-full mb-3 rounded">
-    <input id="password" type="password" placeholder="Password" class="border p-2 w-full mb-3 rounded">
-    <select id="chamaSelect" class="border p-2 w-full mb-3 rounded">
-      <option value="">Loading Chamas...</option>
-    </select>
-    <button onclick="login()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Login</button>
+<div id="login" class="h-screen flex items-center justify-center">
+  <div class="bg-white p-6 rounded w-80">
+    <h2 class="font-bold text-xl mb-3">Login</h2>
+    <input id="phone" class="border p-2 w-full mb-2" placeholder="Phone">
+    <input id="password" type="password" class="border p-2 w-full mb-2" placeholder="Password">
+    <select id="chama" class="border p-2 w-full mb-2"></select>
+    <button onclick="login()" class="bg-blue-600 text-white w-full p-2 rounded">Login</button>
   </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboardPage" class="hidden max-w-7xl mx-auto p-4 space-y-4">
+<div id="app" class="hidden p-4">
+  <h1 class="font-bold text-xl mb-3">Dashboard</h1>
 
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl font-bold">Chama Dashboard</h1>
-    <button onclick="logout()" class="text-red-600 font-semibold">Logout</button>
+  <div id="admin" class="hidden">
+    <p>Total Members: <b id="m"></b></p>
+    <p>Contributions: <b id="c"></b></p>
+    <p>Loans: <b id="l"></b></p>
+    <p>Balance: <b id="b"></b></p>
   </div>
 
-  <p>Role: <b id="userRole"></b> | Chama: <b id="currentChama"></b></p>
+  <div id="member" class="hidden">
+    <h2 class="font-bold">My Loans</h2>
+    <table class="w-full text-sm border">
+      <tbody id="loans"></tbody>
+    </table>
 
-  <!-- NAV TABS -->
-  <div class="flex gap-2 bg-white p-2 rounded shadow overflow-x-auto">
-    <button onclick="showTab('overview')" class="px-4 py-2 bg-blue-600 text-white rounded">Overview</button>
-    <button onclick="showTab('statement')" class="px-4 py-2 bg-gray-200 rounded">Statement</button>
-    <button onclick="showTab('loans')" class="px-4 py-2 bg-gray-200 rounded">Loans</button>
-    <button id="adminBtn" onclick="showTab('admin')" class="px-4 py-2 bg-gray-200 rounded hidden">Admin</button>
-    <button id="auditBtn" onclick="showTab('audit')" class="px-4 py-2 bg-gray-200 rounded hidden">Audit</button>
+    <h2 class="font-bold mt-4">Apply Loan</h2>
+    <input id="loanAmt" class="border p-2 w-full">
+    <button onclick="applyLoan()" class="bg-green-600 text-white p-2 w-full mt-2">Apply</button>
   </div>
 
-  <!-- OVERVIEW -->
-  <div id="overview" class="tab block space-y-4">
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-      <div class="bg-white p-4 rounded shadow text-center">
-        <p class="text-gray-500">Members</p>
-        <p id="totalMembers" class="text-2xl font-bold">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <p class="text-gray-500">Contributions</p>
-        <p id="totalContrib" class="text-2xl font-bold">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <p class="text-gray-500">Loans</p>
-        <p id="totalLoans" class="text-2xl font-bold">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <p class="text-gray-500">Interest</p>
-        <p id="totalInterest" class="text-2xl font-bold">0</p>
-      </div>
-      <div class="bg-white p-4 rounded shadow text-center">
-        <p class="text-gray-500">Balance</p>
-        <p id="totalBalance" class="text-2xl font-bold">0</p>
-      </div>
-    </div>
-
-    <div class="bg-white p-4 rounded shadow">
-      <canvas id="financeChart"></canvas>
-    </div>
-  </div>
-
-  <!-- STATEMENT -->
-  <div id="statement" class="tab space-y-4">
-    <div class="bg-white p-4 rounded shadow">
-      <select id="memberSelect" class="border p-2 rounded w-full mb-3"></select>
-
-      <table class="w-full border text-sm">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="border p-2">Date</th>
-            <th class="border p-2">Type</th>
-            <th class="border p-2">Amount</th>
-            <th class="border p-2">Details</th>
-          </tr>
-        </thead>
-        <tbody id="statementBody"></tbody>
-      </table>
-
-      <div class="mt-3 font-bold space-y-1">
-        <p>Contributions: <span id="statementContrib">0</span></p>
-        <p>Loans + Interest: <span id="statementLoans">0</span></p>
-        <p>Balance: <span id="statementBalance">0</span></p>
-      </div>
-
-      <button onclick="downloadPDF()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded">
-        Download PDF
-      </button>
-    </div>
-  </div>
-
-  <!-- LOANS -->
-  <div id="loans" class="tab space-y-4">
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-bold mb-2">My Loans</h2>
-      <table class="w-full border text-sm">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="border p-2">Amount</th>
-            <th class="border p-2">Interest</th>
-            <th class="border p-2">Total</th>
-            <th class="border p-2">Status</th>
-          </tr>
-        </thead>
-        <tbody id="loansTable"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ADMIN -->
-  <div id="admin" class="tab space-y-4">
-    <div class="grid md:grid-cols-3 gap-4">
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-bold mb-2">Approve Members</h2>
-        <div id="pendingMembers"></div>
-      </div>
-
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-bold mb-2">Loan Settings</h2>
-        <input id="interestRate" type="number" placeholder="Interest %" class="border p-2 w-full mb-2">
-        <button onclick="saveInterest()" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Save Interest Rate</button>
-      </div>
-
-      <div class="bg-white p-4 rounded shadow">
-        <h2 class="font-bold mb-2">Create Chama</h2>
-        <input id="newChamaName" placeholder="Chama Name" class="border p-2 w-full mb-2">
-        <button onclick="createChama()" class="bg-green-600 text-white px-4 py-2 rounded w-full">Create</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- AUDIT -->
-  <div id="audit" class="tab space-y-4">
-    <div class="bg-white p-4 rounded shadow">
-      <h2 class="font-bold mb-2">Audit Logs</h2>
-      <table class="w-full border text-sm">
-        <thead class="bg-gray-200">
-          <tr>
-            <th class="border p-2">Date</th>
-            <th class="border p-2">User</th>
-            <th class="border p-2">Action</th>
-          </tr>
-        </thead>
-        <tbody id="auditTable"></tbody>
-      </table>
-    </div>
-  </div>
-
+  <button onclick="logout()" class="text-red-600 mt-4">Logout</button>
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyo-V7DxUQr1XW0ETtIF-NNYhm8dHItT0YfU9KwyPIK3zbMB_BVg0hegCmYapqQi_CWCA/exec"; // Replace with your deployed Apps Script URL
+const API="PASTE_YOUR_DEPLOYED_URL_HERE";
+let role,userId,chamaId;
 
-// SESSION
-const session = {
-  save: d => localStorage.setItem("chamaSession", JSON.stringify(d)),
-  get: () => JSON.parse(localStorage.getItem("chamaSession")),
-  clear: () => localStorage.removeItem("chamaSession")
-};
-
-// UTILITY
-const showLoader = () => document.getElementById("loader").style.display = "flex";
-const hideLoader = () => document.getElementById("loader").style.display = "none";
-
-// STATE
-let role=null, phone=null, chamaId=null;
-let members=[], contributions=[], loans=[], audits=[];
-let chart=null;
-
-// HELPER
-const money=n=>Number(n).toLocaleString("en-KE",{style:"currency",currency:"KES"});
-
-function post(action, data={}) {
-  return fetch(API, {
-    method:"POST",
-    body: JSON.stringify({action, ...data})
-  }).then(r=>r.json());
+function post(action,data){
+  return fetch(API,{method:"POST",body:JSON.stringify({action,...data})})
+    .then(r=>r.json());
 }
 
-// ===== LOGIN =====
 function login(){
-  const phoneInput=document.getElementById("phone");
-  const passwordInput=document.getElementById("password");
-  const chamaSelect=document.getElementById("chamaSelect");
-
-  const phoneVal = phoneInput.value.trim();
-  const passVal = passwordInput.value.trim();
-  const chamaVal = chamaSelect.value;
-
-  if(!phoneVal || !passVal || !chamaVal) return alert("Fill all fields");
-
-  showLoader();
-  post("login", {phone: phoneVal, password: passVal, chamaId: chamaVal})
-    .then(d=>{
-      if(!d.success) return alert(d.message || "Login failed");
-      role = d.role; phone = phoneVal; chamaId = chamaVal;
-      session.save({role, phone, chamaId});
-      initDashboard();
-    }).finally(hideLoader);
-}
-
-function logout(){ session.clear(); location.reload(); }
-
-// ===== INIT DASHBOARD =====
-function initDashboard(){
-  document.getElementById("loginPage").classList.add("hidden");
-  document.getElementById("dashboardPage").classList.remove("hidden");
-  document.getElementById("userRole").textContent = role.toUpperCase();
-  document.getElementById("currentChama").textContent = chamaId;
-
-  if(role==="admin"){
-    document.getElementById("adminBtn").classList.remove("hidden");
-    document.getElementById("auditBtn").classList.remove("hidden");
-  }
-  loadData();
-}
-
-// ===== LOAD DATA =====
-function loadData(){
-  showLoader();
-  Promise.all([
-    post("getDashboard",{chamaId}),
-    post("getStatement",{chamaId}),
-    post("getLoans",{chamaId}),
-    post("getAudit",{chamaId})
-  ]).then(([d,s,l,a])=>{
-    members=d.members||[];
-    contributions=d.contributions||[];
-    loans=l||[];
-    audits=a||[];
-    renderDashboard(d);
-    renderStatement(s);
-    renderLoans(l);
-    renderAudit(a);
-  }).finally(hideLoader);
-}
-
-// ===== RENDER FUNCTIONS =====
-function renderDashboard(d){
-  document.getElementById("totalMembers").textContent=d.members?.length || 0;
-  document.getElementById("totalContrib").textContent=money(d.totalContrib || 0);
-  document.getElementById("totalLoans").textContent=money(d.totalLoans || 0);
-  document.getElementById("totalInterest").textContent=money(d.totalInterest || 0);
-  document.getElementById("totalBalance").textContent=money(d.balance || 0);
-
-  if(chart) chart.destroy();
-  chart=new Chart(document.getElementById("financeChart"),{
-    type:"bar",
-    data:{
-      labels:["Contributions","Loans","Interest","Balance"],
-      datasets:[{data:[d.totalContrib||0,d.totalLoans||0,d.totalInterest||0,d.balance||0]}]
-    }
+  post("login",{
+    phone:phone.value,
+    password:password.value,
+    chamaId:chama.value
+  }).then(d=>{
+    if(!d.success) return alert(d.message);
+    role=d.role; userId=d.userId; chamaId=d.chamaId;
+    login.style.display="none";
+    app.classList.remove("hidden");
+    role==="admin"?loadAdmin():loadMember();
   });
 }
 
-function renderStatement(s){
-  const tbody=document.getElementById("statementBody");
-  tbody.innerHTML="";
-  (s||[]).forEach(r=>{
-    tbody.innerHTML+=`
-      <tr>
-        <td class="border p-2">${new Date(r.date).toLocaleDateString()}</td>
-        <td class="border p-2">${r.type}</td>
-        <td class="border p-2">${money(r.amount)}</td>
-        <td class="border p-2">${r.details||""}</td>
-      </tr>`;
+function loadAdmin(){
+  admin.classList.remove("hidden");
+  post("getDashboard",{chamaId}).then(d=>{
+    m.textContent=d.members;
+    c.textContent=d.totalContrib;
+    l.textContent=d.totalLoans;
+    b.textContent=d.balance;
   });
 }
 
-function renderLoans(l){
-  const tbody=document.getElementById("loansTable");
-  tbody.innerHTML="";
-  (l||[]).forEach(r=>{
-    tbody.innerHTML+=`
-      <tr>
-        <td class="border p-2">${money(r.amount)}</td>
-        <td class="border p-2">${money(r.interest)}</td>
-        <td class="border p-2">${money(r.total)}</td>
-        <td class="border p-2">${r.status}</td>
-      </tr>`;
-  });
-}
-
-function renderAudit(a){
-  const tbody=document.getElementById("auditTable");
-  tbody.innerHTML="";
-  (a||[]).forEach(r=>{
-    tbody.innerHTML+=`
-      <tr>
-        <td class="border p-2">${new Date(r.date).toLocaleString()}</td>
-        <td class="border p-2">${r.user}</td>
-        <td class="border p-2">${r.action}</td>
-      </tr>`;
-  });
-}
-
-// ===== ACTIONS =====
-function saveInterest(){ post("setInterest",{rate:document.getElementById("interestRate").value,chamaId}); }
-function createChama(){ post("createChama",{name:document.getElementById("newChamaName").value}); }
-function downloadPDF(){ post("getPDF",{chamaId}).then(d=>window.open(d.url)); }
-
-// ===== TABS =====
-function showTab(id){
-  document.querySelectorAll(".tab").forEach(t=>t.style.display="none");
-  document.getElementById(id).style.display="block";
-}
-
-// ===== LOAD CHAMAS =====
-function loadChamas(){
-  post("getChamas").then(data=>{
-    const sel=document.getElementById("chamaSelect");
-    sel.innerHTML='<option value="">Select Chama</option>';
-    (data||[]).forEach(c=>{
-      const opt=document.createElement("option");
-      opt.value=c.id; opt.textContent=c.name; sel.appendChild(opt);
+function loadMember(){
+  member.classList.remove("hidden");
+  post("getMemberData",{memberId:userId,chamaId}).then(d=>{
+    loans.innerHTML="";
+    d.loans.forEach(x=>{
+      loans.innerHTML+=`<tr><td>${x[4]}</td><td>${x[5]}</td></tr>`;
     });
   });
 }
 
-// ===== AUTO LOGIN =====
-window.onload = ()=>{
-  loadChamas();
-  const s=session.get();
-  if(s){ role=s.role; phone=s.phone; chamaId=s.chamaId; initDashboard(); }
-};
+function applyLoan(){
+  post("applyLoan",{memberId:userId,amount:loanAmt.value,chamaId})
+    .then(()=>alert("Loan submitted"));
+}
+
+function logout(){ location.reload(); }
+
+post("getChamas").then(d=>{
+  chama.innerHTML=d.map(x=>`<option value="${x.id}">${x.name}</option>`).join("");
+});
 </script>
 </body>
 </html>
